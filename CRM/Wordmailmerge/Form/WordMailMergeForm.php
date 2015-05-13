@@ -11,12 +11,12 @@ class CRM_Wordmailmerge_Form_WordMailMergeForm extends CRM_Contact_Form_Task {
   
   static protected $_searchFormValues;
   function preProcess() {
-    $token = CRM_Core_SelectValues::contactTokens();
-    $tokens = CRM_Utils_Token::formatTokensForDisplay($token);
-    $firstTokenmrg = array();
-    $tokenMerge = array();
-    $firstTokenmrg = array_merge($tokens[0]['children'], $tokens[1]['children']);
-    $tokenMerge = array_merge($firstTokenmrg, $tokens[2]['children']);
+    $token          = CRM_Core_SelectValues::contactTokens();
+    $tokens         = CRM_Utils_Token::formatTokensForDisplay($token);
+    $firstTokenmrg  = array();
+    $tokenMerge     = array();
+    $firstTokenmrg  = array_merge($tokens[0]['children'], $tokens[1]['children']);
+    $tokenMerge     = array_merge($firstTokenmrg, $tokens[2]['children']);
     foreach ($tokenMerge as $tmKey => $tmValue) {
       $tokenMerge[$tmKey]['token_name'] =  str_replace(array('{contact.','}'),"",$tmValue['id']);
     }
@@ -197,9 +197,9 @@ class CRM_Wordmailmerge_Form_WordMailMergeForm extends CRM_Contact_Form_Task {
   }
 
   function buildQuickForm() {
-    $mysql = 'SELECT id FROM veda_civicrm_wordmailmerge'; 
+    $mysql      = 'SELECT id FROM veda_civicrm_wordmailmerge'; 
     $tableCount = CRM_Core_DAO::executeQuery($mysql);
-    $noofRows = array();
+    $noofRows   = array();
     while ($tableCount->fetch()) {
       $noofRows = $tableCount->id;
     }
@@ -215,11 +215,11 @@ class CRM_Wordmailmerge_Form_WordMailMergeForm extends CRM_Contact_Form_Task {
         $msgTemplatesResult[$dao->id] = $dao->msg_title;
       }
       // add form elements
-      $this->add('select', 'message_template', ts('Message Template'), array('' => '- select -') + $msgTemplatesResult, TRUE);
+      $this->add('select', 'message_template', ts('Message Template'), $msgTemplatesResult, TRUE);
       $this->addButtons(array(
         array(
-          'type' => 'submit',
-          'name' => ts('Merge'),
+          'type'      => 'submit',
+          'name'      => ts('Merge'),
           'isDefault' => TRUE,
         ),
       ));
@@ -232,50 +232,48 @@ class CRM_Wordmailmerge_Form_WordMailMergeForm extends CRM_Contact_Form_Task {
   function postProcess() {
     $values = $this->_contactIds;
     $config = CRM_Core_Config::singleton();
+    require_once $config->extensionsDir.'/uk.co.vedaconsulting.module.wordmailmerge/tinybutstrong/tbs_class.php';
+    require_once $config->extensionsDir.'/uk.co.vedaconsulting.module.wordmailmerge/tinybutstrong-opentbs/tbs_plugin_opentbs.php';
     $msg_id = $this->_submitValues['message_template'];
     if(!empty($msg_id)){
-      $mysql =  " SELECT * FROM veda_civicrm_wordmailmerge WHERE msg_template_id = %1"; 
+      $mysql  =  " SELECT * FROM veda_civicrm_wordmailmerge WHERE msg_template_id = %1"; 
       $params = array(1 => array($msg_id, 'Integer'));
-      $dao = CRM_Core_DAO::executeQuery($mysql, $params);
-      //$dao = CRM_Core_DAO::executeQuery($mysql);
+      $dao    = CRM_Core_DAO::executeQuery($mysql, $params);
       while ($dao->fetch()) {
         $fileId = $dao->file_id;
       }
-      $sql = "SELECT * FROM civicrm_file WHERE id = %1";
+      $sql    = "SELECT * FROM civicrm_file WHERE id = %1";
       $params = array(1 => array($fileId, 'Integer'));
-      $dao = CRM_Core_DAO::executeQuery($sql, $params);
-      //$dao = CRM_Core_DAO::executeQuery($sql);
-        while ($dao->fetch()) {
-          $default['fileID']        = $dao->id;
-          $default['mime_type']     = $dao->mime_type;
-          $default['fileName']      = $dao->uri;
-          $default['cleanName']     = CRM_Utils_File::cleanFileName($dao->uri);
-          $default['fullPath']      = $config->customFileUploadDir . DIRECTORY_SEPARATOR . $dao->uri;
-          $default['deleteURLArgs'] = CRM_Core_BAO_File::deleteURLArgs('civicrm_file', $msg_id, $dao->id);
-        }
+      $dao    = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $default['fileID']        = $dao->id;
+        $default['mime_type']     = $dao->mime_type;
+        $default['fileName']      = $dao->uri;
+        $default['cleanName']     = CRM_Utils_File::cleanFileName($dao->uri);
+        $default['fullPath']      = $config->customFileUploadDir . DIRECTORY_SEPARATOR . $dao->uri;
+        $default['deleteURLArgs'] = CRM_Core_BAO_File::deleteURLArgs('civicrm_file', $msg_id, $dao->id);
+      }
       $defaults[$dao->id] = $default;
       $this->assign('defaults', $defaults);
       $noofContact = count($this->_contactIds);
-      require_once $config->extensionsDir.'/uk.co.vedaconsulting.module.wordmailmerge/tinybutstrong/tbs_class.php';
-      require_once $config->extensionsDir.'/uk.co.vedaconsulting.module.wordmailmerge/tinybutstrong-opentbs/tbs_plugin_opentbs.php';
       $TBS = new clsTinyButStrong; // new instance of TBS
       $TBS->Plugin(TBS_INSTALL, OPENTBS_PLUGIN); // load the OpenTBS plugin
       $template = $default['fullPath'];
-      $token = CRM_Core_SelectValues::contactTokens();
-      $tokens = CRM_Utils_Token::formatTokensForDisplay($token);
-      $firstTokenmrg = array();
-      $tokenMerge = array();
-      $firstTokenmrg = array_merge($tokens[0]['children'], $tokens[1]['children']);
-      $tokenMerge = array_merge($firstTokenmrg, $tokens[2]['children']);
+      $token          = CRM_Core_SelectValues::contactTokens();
+      $tokens         = CRM_Utils_Token::formatTokensForDisplay($token);
+      $firstTokenmrg  = array();
+      $tokenMerge     = array();
+      $firstTokenmrg  = array_merge($tokens[0]['children'], $tokens[1]['children']);
+      $tokenMerge     = array_merge($firstTokenmrg, $tokens[2]['children']);
       foreach ($tokenMerge as $tmKey => $tmValue) {
         $tokenMerge[$tmKey]['token_name'] =  str_replace(array('{contact.','}'),"",$tmValue['id']);
       }
       foreach ($values as $key => $value) {
         if($key < $noofContact){
-          $selectedCID = $values[$key];
-          $contact = $this->getContact($selectedCID);
+          $selectedCID  = $values[$key];
+          $contact      = $this->getContact($selectedCID);
           foreach ($tokenMerge as $atKey => $atValue) {
-              $vars[$key][$atValue['token_name']] = CRM_Utils_Token::getContactTokenReplacement($atValue['token_name'], $contact);
+            $vars[$key][$atValue['token_name']] = CRM_Utils_Token::getContactTokenReplacement($atValue['token_name'], $contact);
           }
           $TBS->LoadTemplate($template, OPENTBS_ALREADY_UTF8);
           $TBS->MergeBlock('CiviCRM',$vars);
@@ -287,13 +285,88 @@ class CRM_Wordmailmerge_Form_WordMailMergeForm extends CRM_Contact_Form_Task {
     }
     parent::postProcess();
   }
-  
+
   function getContact($selectedCID) {
-    $result = civicrm_api3('Contact', 'getsingle', array(
+    require_once 'CRM/Core/DAO/Address.php';
+    $contactResult = civicrm_api3('Contact', 'getsingle', array(
                            'sequential' => 1,
                            'contact_id' => $selectedCID,
     ));
-    return $result;
+    $sql = "SELECT * FROM civicrm_address WHERE contact_id = %1";
+    $params         = array(1 => array($selectedCID, 'Integer'));
+    $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['street_number'] = $dao->street_number ; 
+        $addressResult['street_number_suffix'] = $dao->street_number_suffix ; 
+        $addressResult['street_name'] = $dao->street_name ; 
+        $addressResult['street_unit'] = $dao->street_unit ; 
+        $addressResult['address_name'] = $dao->name ; 
+        $addressResult['master_id'] = $dao->master_id ; 
+      }
+      $sql = "SELECT cc.addressee_display, cc.created_date FROM civicrm_contact cc 
+              LEFT JOIN civicrm_option_group oga ON (oga.name = 'addressee')
+              LEFT JOIN civicrm_option_value cov ON (cc.addressee_id = cov.value AND oga.id = cov.option_group_id )
+              WHERE cc.id = %1";
+      $params         = array(1 => array($selectedCID, 'Integer'));
+      $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['addressee'] = $dao->addressee_display ; 
+        $addressResult['created_date'] = $dao->created_date ; 
+      }
+      $sql = "SELECT cov.label FROM civicrm_contact cc 
+              LEFT JOIN civicrm_value_constituent_information_1 cvci  ON (cc.id = cvci.entity_id)
+              LEFT JOIN civicrm_option_value cov ON (cvci.marital_status_2 = cov.value) Where cc.id = %1";
+      $params         = array(1 => array($selectedCID, 'Integer'));
+      $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['custom_2'] = $dao->label ; 
+      }
+      $sql = "SELECT cov.label FROM civicrm_contact cc 
+              LEFT JOIN civicrm_value_constituent_information_1 cvci  ON (cc.id = cvci.entity_id)
+              LEFT JOIN civicrm_option_value cov ON (cvci.most_important_issue_1 = cov.value) Where cc.id =%1";
+      $params         = array(1 => array($selectedCID, 'Integer'));
+      $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['custom_1'] = $dao->label ; 
+      }
+      $sql = "SELECT cvci.marriage_date_3 FROM civicrm_contact cc 
+              LEFT JOIN civicrm_value_constituent_information_1 cvci  ON (cc.id = cvci.entity_id)
+              Where cc.id = %1";
+      $params         = array(1 => array($selectedCID, 'Integer'));
+      $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['custom_3'] = $dao->marriage_date_3 ; 
+      }
+      $sql = "SELECT  csp.name, cc.employer_id FROM civicrm_contact cc 
+              LEFT JOIN civicrm_address ca  ON (cc.id = ca.contact_id)
+              LEFT JOIN civicrm_state_province csp ON (ca.state_province_id = csp.id AND ca.country_id = csp.country_id) where cc.id = %1";
+      $params         = array(1 => array($selectedCID, 'Integer'));
+      $dao = CRM_Core_DAO::executeQuery($sql, $params);
+      while ($dao->fetch()) {
+        $addressResult['county'] = $dao->name ; 
+        $addressResult['current_employer_id'] = $dao->employer_id ; 
+      }
+    $addressResult['checksum'] = CRM_Contact_BAO_Contact_Utils::generateChecksum($selectedCID);
+    $token          = CRM_Core_SelectValues::contactTokens();
+    $tokens         = CRM_Utils_Token::formatTokensForDisplay($token);
+    $firstTokenmrg  = array();
+    $tokenMerge     = array();
+    $firstTokenmrg  = array_merge($tokens[0]['children'], $tokens[1]['children']);
+    $tokenMerge     = array_merge($firstTokenmrg, $tokens[2]['children']);
+    foreach ($tokenMerge as $tmKey => $tmValue) {
+      $tokenMerge[$tmKey] =  str_replace(array('{contact.','}'),"",$tmValue['id']);
+    }
+    unset($contactResult['contact_sub_type']);
+    unset($contactResult['id']);
+    $flipArray = array_flip($tokenMerge);
+    foreach ($contactResult as $key => $value) {
+      if (array_key_exists( $key,$flipArray )){
+        $contactArray[$key] = $value;
+      }
+    }
+    $contactArrayToken     = array_merge($flipArray, $contactArray);
+    $contactArrayForToken     = array_merge($contactArrayToken, $addressResult);
+    return $contactArrayForToken;
   }
   /**
    * Get the fields/elements defined in this form.
